@@ -7,11 +7,12 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
 
-def download_youtube(url: str, out_dir: str) -> str:
+def download_youtube(url: str, out_dir: str = DOWNLOAD_DIR) -> str:
     yt = YouTube(url, use_oauth=False, allow_oauth_cache=True)
     stream = yt.streams.filter(only_audio=True).first()
-    path = stream.download(output_path=out_dir, filename="audio.mp4")
-    return path
+    mp4_path = stream.download(output_path=out_dir, filename="audio.mp4")
+    wav_path = convert_to_wav(mp4_path)
+    return wav_path
 
 
 
@@ -49,9 +50,7 @@ def process_input(source : str) -> list:
     else:
         print("Detected local file. Converting to WAV ...")
         wav_path = convert_to_wav(source)
-        
     print("Chunking audio ...")
     chunks = chunk_audio(wav_path)
     print(f"Audio ready - {len(chunks)} chunk(s) created.")
     return chunks
-
