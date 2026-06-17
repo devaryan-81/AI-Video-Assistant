@@ -1,4 +1,4 @@
-import yt_dlp
+from pytubefix import YouTube
 from pydub import AudioSegment
 import os
 
@@ -7,25 +7,11 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
 
-def download_youtube_audio(url : str) -> str:
-    output_path = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
-    ydl_opts = {
-        "format": "bestaudio/best",
-        "outtmpl": output_path,
-        "ffmpeg_location": "E:/ffmpeg-8.1.1-essentials_build/ffmpeg-8.1.1-essentials_build/bin",
-        "postprocessors": [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "wav",
-                "preferredquality": "192",
-            }
-        ]
-    }
-    
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
-    return filename
+def download_youtube(url: str, out_dir: str) -> str:
+    yt = YouTube(url, use_oauth=False, allow_oauth_cache=True)
+    stream = yt.streams.filter(only_audio=True).first()
+    path = stream.download(output_path=out_dir, filename="audio.mp4")
+    return path
 
 
 
@@ -59,7 +45,7 @@ def chunk_audio(wav_path : str, chunk_minutes : int = 10) -> list:
 def process_input(source : str) -> list:
     if source.startswith("http://") or source.startswith("https://"):
         print("Detected Youtube URL. Downloading audio ...")
-        wav_path = download_youtube_audio(source)
+        wav_path = download_youtube(source)
     else:
         print("Detected local file. Converting to WAV ...")
         wav_path = convert_to_wav(source)
